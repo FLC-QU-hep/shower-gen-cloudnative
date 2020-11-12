@@ -1,4 +1,4 @@
-{% for n in range(1,19) %}
+{% for n in range(1,3) %}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -20,20 +20,21 @@ spec:
         - name: REC_MODEL
           value: ILD_l5_o1_v02
         - name: DISK
-          value: /home/ilc/disk
+          value: /home/ilc/iLCInstall/ilcsoft/disk
         command: ["/bin/sh", "-c"]
         args: 
          - source $(ILCSOFT_version)/init_ilcsoft.sh;
-           mkdir /home/ilc/disk; 
+           mkdir -p $(DISK); 
            git clone https://github.com/FLC-QU-hep/shower-gen-cloudnative.git;
            git clone --branch $(ILDCONF_version) https://github.com/iLCSoft/ILDConfig.git;
            cp shower-gen-cloudnative/config/* ILDConfig/StandardConfig/production; 
+           cd ILDConfig/StandardConfig/production; 
            echo "-- Running DDSim $(SIM_MODEL) ...";
            ddsim --outputFile $(DISK)/photon-sim-{{ n }}.slcio --compactFile $lcgeo_DIR/ILD/compact/$(SIM_MODEL)/$(SIM_MODEL).xml --steeringFile ddsim_steer.py;
            echo "-- Running Reco $(REC_MODEL) ...";
            Marlin MarlinStdReco.xml --constant.lcgeo_DIR=$lcgeo_DIR --constant.DetectorModel=$(REC_MODEL) --constant.OutputBaseName=$(DISK)/photon-rec-{{ n }}  --global.LCIOInputFiles=$(DISK)/photon-sim-{{ n }}.slcio --constant.RunBeamCalReco=false;     
         volumeMounts:
-         - mountPath: /home/ilc/
+         - mountPath: /home/ilc/iLCInstall/ilcsoft/disk
            name: vol1
       restartPolicy: Never
       volumes:
